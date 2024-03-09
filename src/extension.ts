@@ -3,7 +3,7 @@ import { simpleGit, SimpleGit } from 'simple-git';
 import { DevOpsGPTViewProvider } from './devOpsGPTViewProvider';
 import * as fs from 'fs';
 
-export type Settings = {selectedInsideCodeblock?: boolean, pasteOnClick?: boolean, model?: string, maxTokens?: number, temperature?: number};
+export type Settings = {selectedInsideCodeblock?: boolean, pasteOnClick?: boolean, model?: string, maxTokens?: number, temperature?: number, localBaseUrl?: string};
 
 
 export function activate(context: vscode.ExtensionContext) {
@@ -57,6 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 	vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+		console.log('Update copilot configuration');
 		if (event.affectsConfiguration('devops-copilot.apiKey') || event.affectsConfiguration('devops-copilot.azureDeploymentName') ) {
 			const config = vscode.workspace.getConfiguration('devops-copilot');
 			if( config.get('provider') === "azure"){
@@ -83,7 +84,12 @@ export function activate(context: vscode.ExtensionContext) {
 		} else if (event.affectsConfiguration('devops-copilot.model')) {
 			const config = vscode.workspace.getConfiguration('devops-copilot');
 			provider.setSettings({ model: config.get('model') || 'text-davinci-003' });
+		} else if (event.affectsConfiguration('devops-copilot.localBaseUrl')) {
+			const config = vscode.workspace.getConfiguration('devops-copilot');
+			console.log('Updating base url to ' + config.get('localBaseUrl'));
+			provider.setSettings({ localBaseUrl: config.get('localBaseUrl') || 'http://127.0.0.1:11434/v1/' });
 		}
+		console.log('Updated configuration of copilot');
 	});
 }
 
@@ -99,12 +105,16 @@ function initProvider(context: vscode.ExtensionContext) {
 		provider.setAuthenticationInfo({isLocal: false, isAzure: false, apiKey: config.get('apiKey') });
 	};
 
+	console.log('Here');
+	console.log(config);
 	provider.setSettings({
 		selectedInsideCodeblock: config.get('selectedInsideCodeblock') || false,
 		pasteOnClick: config.get('pasteOnClick') || false,
 		maxTokens: config.get('maxTokens') || 500,
 		temperature: config.get('temperature') || 0.5,
-		model: config.get('model') || 'text-davinci-003'
+		model: config.get('model') || 'text-davinci-003',
+		localBaseUrl: config.get('localBaseUrl') || 'http://127.0.0.1:11434/v1/'
+		// localBaseUrl: config.get('localBaseUrl') || 'http://0.0.0.0:8000'
 	});
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(DevOpsGPTViewProvider.viewType, provider,  {

@@ -23,7 +23,8 @@ export class DevOpsGPTViewProvider implements vscode.WebviewViewProvider {
         selectedInsideCodeblock: false,
         pasteOnClick: true,
         maxTokens: 500,
-        temperature: 0.5
+        temperature: 0.5,
+        localBaseUrl: 'http://127.0.0.1:11434/v1/'
     };
     private _apiKey?: string;
     private _isAzure?: boolean;
@@ -57,6 +58,7 @@ export class DevOpsGPTViewProvider implements vscode.WebviewViewProvider {
     }
 
     private _newAPI() {
+        console.log("Instantiating new API");
         if (this._isAzure) {
             if (!this._azureEndpoint || !this._azureDeploymentName || !this._apiKey) {
                 console.warn("Azure endpoint or deployment name or azure api key are not set, please go to extension settings (read README.md for more info)");
@@ -65,7 +67,8 @@ export class DevOpsGPTViewProvider implements vscode.WebviewViewProvider {
                 this._openai = new OpenAIClient(this._azureEndpoint,new AzureKeyCredential(this._apiKey));
             }
         } else if(this._isLocal){
-            this._openai = new OpenAI({apiKey: "anything", baseURL: "http://0.0.0.0:8000"});
+            console.warn("Local mode, baseUrl set to " + this._settings.localBaseUrl);            
+            this._openai = new OpenAI({apiKey: "anything", baseURL: this._settings.localBaseUrl});
         }
         else {
             if (!this._apiKey) {

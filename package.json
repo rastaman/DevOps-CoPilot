@@ -266,6 +266,12 @@
           "default": "",
           "description": "Path to store feedback",
           "order": 15
+        },
+        "devops-copilot.localBaseUrl": {
+          "type": "string",
+          "default": "http://0.0.0.0:8000",
+          "description": "Which local url to use",
+          "order": 16
         }
       }
     }
